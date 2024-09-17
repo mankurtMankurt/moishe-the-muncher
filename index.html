@@ -33,7 +33,7 @@
             justify-content: center;
             flex-wrap: wrap;
             margin-top: 20px;
-            max-width: 300px;
+            width: 240px;
         }
         .challahBtn {
             width: 80px;
@@ -70,12 +70,8 @@
             border-radius: 18px;
             z-index: -1;
         }
-        #startMessage {
-            display: none;
-            margin-top: 20px;
-            font-size: 18px;
-            color: #0038b8;
-        }
+        #upBtn { margin-left: 85px; }
+        #downBtn { margin-left: 85px; }
     </style>
 </head>
 <body>
@@ -88,14 +84,12 @@
             <button class="challahBtn" id="rightBtn">→</button>
             <button class="challahBtn" id="downBtn">↓</button>
         </div>
-        <div id="startMessage">Tap any Challah to start!</div>
     </div>
     <script>
     (function() {
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const mobileControls = document.getElementById('mobileControls');
-        const startMessage = document.getElementById('startMessage');
 
         let snake = [{x: 10, y: 10}];
         let food = {x: 0, y: 0};
@@ -121,7 +115,6 @@
 
         if (isMobile()) {
             mobileControls.style.display = 'flex';
-            startMessage.style.display = 'block';
         }
 
         function gameLoop() {
@@ -253,7 +246,6 @@
             generateFood();
             if (isMobile()) {
                 gameStarted = false;
-                startMessage.style.display = 'block';
             }
         }
 
@@ -280,7 +272,6 @@
         function startGame() {
             if (!gameStarted) {
                 gameStarted = true;
-                startMessage.style.display = 'none';
                 gameLoop();
             }
         }
