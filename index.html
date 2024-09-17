@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moishe the Muncher</title>
+    <style>
+        body {
+            font-family: 'Arial Hebrew', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #e6f3ff;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        canvas {
+            border: 4px solid #0038b8;
+            background-color: #ffffff;
+        }
+        h1 {
+            color: #0038b8;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <h1>Moishe the Muncher</h1>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+    </div>
+    <script>
+    (function() {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let snake = [{x: 200, y: 200}];
+        let food = {x: 0, y: 0};
+        let dx = 20;
+        let dy = 0;
+        let score = 0;
+
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+
+        function gameLoop() {
+            clearCanvas();
+            moveSnake();
+            drawFood();
+            drawSnake();
+            checkCollision();
+            setTimeout(gameLoop, 150);
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function moveSnake() {
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                generateFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function drawSnake() {
+            snake.forEach((segment, index) => {
+                if (index === 0) {
+                    drawHasidHead(segment.x, segment.y);
+                } else {
+                    drawHasidBody(segment.x, segment.y);
+                }
+            });
+        }
+
+        function drawHasidHead(x, y) {
+            // Face
+            ctx.fillStyle = '#FFE0B2';
+            ctx.fillRect(x, y, gridSize, gridSize);
+            
+            // Hat
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x - 2, y - 5, gridSize + 4, 7);
+            ctx.fillRect(x + 2, y - 10, gridSize - 4, 5);
+            
+            // Beard
+            ctx.fillStyle = '#4E342E';
+            ctx.fillRect(x, y + gridSize / 2, gridSize, gridSize / 2);
+            
+            // Payot
+            const payotLength = Math.min(10 + (snake.length - 1) * 2, 30);
+            ctx.beginPath();
+            ctx.moveTo(x, y + gridSize / 2);
+            ctx.quadraticCurveTo(x - 8, y + gridSize, x, y + gridSize + payotLength);
+            ctx.moveTo(x + gridSize, y + gridSize / 2);
+            ctx.quadraticCurveTo(x + gridSize + 8, y + gridSize, x + gridSize, y + gridSize + payotLength);
+            ctx.strokeStyle = '#4E342E';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawHasidBody(x, y) {
+            // Black coat
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x, y, gridSize, gridSize);
+            
+            // White shirt
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(x + gridSize / 4, y, gridSize / 2, gridSize / 2);
+        }
+
+        function drawFood() {
+            // Gefilte fish
+            ctx.fillStyle = '#F5DEB3';
+            ctx.beginPath();
+            ctx.ellipse(food.x + gridSize / 2, food.y + gridSize / 2, gridSize / 2, gridSize / 3, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Texture
+            ctx.fillStyle = '#D2B48C';
+            for (let i = 0; i < 5; i++) {
+                const angle = Math.random() * 2 * Math.PI;
+                const radius = gridSize / 4 * Math.random();
+                ctx.beginPath();
+                ctx.arc(food.x + gridSize / 2 + Math.cos(angle) * radius, 
+                        food.y + gridSize / 2 + Math.sin(angle) * radius, 
+                        1, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            
+            // Carrot
+            ctx.fillStyle = '#FFA500';
+            ctx.beginPath();
+            ctx.arc(food.x + gridSize / 2, food.y + gridSize / 4, gridSize / 6, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#FF8C00';
+            ctx.beginPath();
+            ctx.arc(food.x + gridSize / 2, food.y + gridSize / 4, gridSize / 12, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function generateFood() {
+            food.x = Math.floor(Math.random() * tileCount) * gridSize;
+            food.y = Math.floor(Math.random() * tileCount) * gridSize;
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                resetGame();
+            }
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    resetGame();
+                }
+            }
+        }
+
+        function resetGame() {
+            alert(`Game Over! Moishe's score: ${score}`);
+            snake = [{x: 200, y: 200}];
+            dx = 20;
+            dy = 0;
+            score = 0;
+            generateFood();
+        }
+
+        function handleKeyPress(e) {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    if (dx === 0) { dx = -gridSize; dy = 0; }
+                    break;
+                case 'ArrowUp':
+                    if (dy === 0) { dx = 0; dy = -gridSize; }
+                    break;
+                case 'ArrowRight':
+                    if (dx === 0) { dx = gridSize; dy = 0; }
+                    break;
+                case 'ArrowDown':
+                    if (dy === 0) { dx = 0; dy = gridSize; }
+                    break;
+            }
+        }
+
+        document.addEventListener('keydown', handleKeyPress);
+
+        generateFood();
+        gameLoop();
+    })();
+    </script>
+</body>
+</html>
