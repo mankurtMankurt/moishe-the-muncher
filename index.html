@@ -16,18 +16,65 @@
         }
         #gameContainer {
             text-align: center;
-            touch-action: none;
         }
         canvas {
             border: 4px solid #0038b8;
             background-color: #ffffff;
             max-width: 100%;
-            max-height: 80vh;
+            max-height: 70vh;
         }
         h1 {
             color: #0038b8;
             font-size: 24px;
             margin-bottom: 10px;
+        }
+        #mobileControls {
+            display: none;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            max-width: 300px;
+        }
+        .challahBtn {
+            width: 80px;
+            height: 50px;
+            margin: 5px;
+            background-color: #deb887;
+            border: 2px solid #8b4513;
+            border-radius: 25px;
+            font-size: 24px;
+            color: #8b4513;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .challahBtn::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            background: linear-gradient(45deg, #f4e3c5, #deb887);
+            border-radius: 20px;
+            z-index: -1;
+        }
+        .challahBtn::after {
+            content: '';
+            position: absolute;
+            top: 7px;
+            left: 7px;
+            right: 7px;
+            bottom: 7px;
+            background: linear-gradient(-45deg, #deb887, #cd9b5a);
+            border-radius: 18px;
+            z-index: -1;
+        }
+        #startMessage {
+            display: none;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #0038b8;
         }
     </style>
 </head>
@@ -35,11 +82,20 @@
     <div id="gameContainer">
         <h1>Moishe the Muncher</h1>
         <canvas id="gameCanvas"></canvas>
+        <div id="mobileControls">
+            <button class="challahBtn" id="upBtn">↑</button>
+            <button class="challahBtn" id="leftBtn">←</button>
+            <button class="challahBtn" id="rightBtn">→</button>
+            <button class="challahBtn" id="downBtn">↓</button>
+        </div>
+        <div id="startMessage">Tap any Challah to start!</div>
     </div>
     <script>
     (function() {
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const mobileControls = document.getElementById('mobileControls');
+        const startMessage = document.getElementById('startMessage');
 
         let snake = [{x: 10, y: 10}];
         let food = {x: 0, y: 0};
@@ -48,9 +104,10 @@
         let score = 0;
         let gridSize = 20;
         let tileCount = 20;
+        let gameStarted = false;
 
         function resizeCanvas() {
-            const maxSize = Math.min(window.innerWidth - 20, window.innerHeight - 100);
+            const maxSize = Math.min(window.innerWidth - 20, window.innerHeight - 150);
             canvas.width = canvas.height = maxSize - (maxSize % 20); // Ensure it's divisible by 20
             gridSize = canvas.width / tileCount;
         }
@@ -62,7 +119,13 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
+        if (isMobile()) {
+            mobileControls.style.display = 'flex';
+            startMessage.style.display = 'block';
+        }
+
         function gameLoop() {
+            if (!gameStarted) return;
             clearCanvas();
             moveSnake();
             drawFood();
@@ -188,6 +251,10 @@
             dy = 0;
             score = 0;
             generateFood();
+            if (isMobile()) {
+                gameStarted = false;
+                startMessage.style.display = 'block';
+            }
         }
 
         function changeDirection(newDx, newDy) {
@@ -199,6 +266,9 @@
         }
 
         function handleKeyPress(e) {
+            if (!gameStarted) {
+                startGame();
+            }
             switch(e.key) {
                 case 'ArrowLeft': changeDirection(-1, 0); break;
                 case 'ArrowUp': changeDirection(0, -1); break;
@@ -207,43 +277,34 @@
             }
         }
 
-        function handleTap(e) {
-            const rect = canvas.getBoundingClientRect();
-            const tapX = e.clientX - rect.left;
-            const tapY = e.clientY - rect.top;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            if (Math.abs(tapX - centerX) > Math.abs(tapY - centerY)) {
-                // Horizontal movement
-                if (tapX < centerX) {
-                    changeDirection(-1, 0); // Left
-                } else {
-                    changeDirection(1, 0);  // Right
-                }
-            } else {
-                // Vertical movement
-                if (tapY < centerY) {
-                    changeDirection(0, -1); // Up
-                } else {
-                    changeDirection(0, 1);  // Down
-                }
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                startMessage.style.display = 'none';
+                gameLoop();
             }
         }
 
         document.addEventListener('keydown', handleKeyPress);
-        
+
         if (isMobile()) {
-            canvas.addEventListener('touchstart', function(e) {
-                e.preventDefault(); // Prevent scrolling when touching the canvas
-                handleTap(e.touches[0]);
-            }, false);
-        } else {
-            canvas.addEventListener('click', handleTap);
+            ['upBtn', 'leftBtn', 'rightBtn', 'downBtn'].forEach(id => {
+                document.getElementById(id).addEventListener('click', function() {
+                    if (!gameStarted) startGame();
+                    switch(id) {
+                        case 'leftBtn': changeDirection(-1, 0); break;
+                        case 'upBtn': changeDirection(0, -1); break;
+                        case 'rightBtn': changeDirection(1, 0); break;
+                        case 'downBtn': changeDirection(0, 1); break;
+                    }
+                });
+            });
         }
 
         generateFood();
-        gameLoop();
+        clearCanvas();
+        drawSnake();
+        drawFood();
     })();
     </script>
 </body>
