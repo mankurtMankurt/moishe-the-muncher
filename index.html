@@ -20,32 +20,73 @@
         canvas {
             border: 4px solid #0038b8;
             background-color: #ffffff;
+            max-width: 100%;
+            max-height: 80vh;
         }
         h1 {
             color: #0038b8;
             font-size: 24px;
             margin-bottom: 10px;
         }
+        #mobileControls {
+            display: none;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .controlBtn {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            font-size: 24px;
+            background-color: #0038b8;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <h1>Moishe the Muncher</h1>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <canvas id="gameCanvas"></canvas>
+        <div id="mobileControls">
+            <button class="controlBtn" id="upBtn">↑</button><br>
+            <button class="controlBtn" id="leftBtn">←</button>
+            <button class="controlBtn" id="rightBtn">→</button><br>
+            <button class="controlBtn" id="downBtn">↓</button>
+        </div>
     </div>
     <script>
     (function() {
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const mobileControls = document.getElementById('mobileControls');
 
-        let snake = [{x: 200, y: 200}];
+        let snake = [{x: 10, y: 10}];
         let food = {x: 0, y: 0};
-        let dx = 20;
+        let dx = 1;
         let dy = 0;
         let score = 0;
+        let gridSize = 20;
+        let tileCount = 20;
 
-        const gridSize = 20;
-        const tileCount = canvas.width / gridSize;
+        function resizeCanvas() {
+            const maxSize = Math.min(window.innerWidth - 20, window.innerHeight - 100);
+            canvas.width = canvas.height = maxSize - (maxSize % 20); // Ensure it's divisible by 20
+            gridSize = canvas.width / tileCount;
+        }
+
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        if (isMobile()) {
+            mobileControls.style.display = 'block';
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
         function gameLoop() {
             clearCanvas();
@@ -85,24 +126,24 @@
         function drawHasidHead(x, y) {
             // Face
             ctx.fillStyle = '#FFE0B2';
-            ctx.fillRect(x, y, gridSize, gridSize);
+            ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
             
             // Hat
             ctx.fillStyle = '#000000';
-            ctx.fillRect(x - 2, y - 5, gridSize + 4, 7);
-            ctx.fillRect(x + 2, y - 10, gridSize - 4, 5);
+            ctx.fillRect(x * gridSize - 2, y * gridSize - 5, gridSize + 4, 7);
+            ctx.fillRect(x * gridSize + 2, y * gridSize - 10, gridSize - 4, 5);
             
             // Beard
             ctx.fillStyle = '#4E342E';
-            ctx.fillRect(x, y + gridSize / 2, gridSize, gridSize / 2);
+            ctx.fillRect(x * gridSize, y * gridSize + gridSize / 2, gridSize, gridSize / 2);
             
             // Payot
             const payotLength = Math.min(10 + (snake.length - 1) * 2, 30);
             ctx.beginPath();
-            ctx.moveTo(x, y + gridSize / 2);
-            ctx.quadraticCurveTo(x - 8, y + gridSize, x, y + gridSize + payotLength);
-            ctx.moveTo(x + gridSize, y + gridSize / 2);
-            ctx.quadraticCurveTo(x + gridSize + 8, y + gridSize, x + gridSize, y + gridSize + payotLength);
+            ctx.moveTo(x * gridSize, y * gridSize + gridSize / 2);
+            ctx.quadraticCurveTo(x * gridSize - 8, y * gridSize + gridSize, x * gridSize, y * gridSize + gridSize + payotLength);
+            ctx.moveTo((x + 1) * gridSize, y * gridSize + gridSize / 2);
+            ctx.quadraticCurveTo((x + 1) * gridSize + 8, y * gridSize + gridSize, (x + 1) * gridSize, y * gridSize + gridSize + payotLength);
             ctx.strokeStyle = '#4E342E';
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -111,18 +152,18 @@
         function drawHasidBody(x, y) {
             // Black coat
             ctx.fillStyle = '#000000';
-            ctx.fillRect(x, y, gridSize, gridSize);
+            ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
             
             // White shirt
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(x + gridSize / 4, y, gridSize / 2, gridSize / 2);
+            ctx.fillRect(x * gridSize + gridSize / 4, y * gridSize, gridSize / 2, gridSize / 2);
         }
 
         function drawFood() {
             // Gefilte fish
             ctx.fillStyle = '#F5DEB3';
             ctx.beginPath();
-            ctx.ellipse(food.x + gridSize / 2, food.y + gridSize / 2, gridSize / 2, gridSize / 3, 0, 0, 2 * Math.PI);
+            ctx.ellipse((food.x + 0.5) * gridSize, (food.y + 0.5) * gridSize, gridSize / 2, gridSize / 3, 0, 0, 2 * Math.PI);
             ctx.fill();
             
             // Texture
@@ -131,8 +172,8 @@
                 const angle = Math.random() * 2 * Math.PI;
                 const radius = gridSize / 4 * Math.random();
                 ctx.beginPath();
-                ctx.arc(food.x + gridSize / 2 + Math.cos(angle) * radius, 
-                        food.y + gridSize / 2 + Math.sin(angle) * radius, 
+                ctx.arc((food.x + 0.5) * gridSize + Math.cos(angle) * radius, 
+                        (food.y + 0.5) * gridSize + Math.sin(angle) * radius, 
                         1, 0, 2 * Math.PI);
                 ctx.fill();
             }
@@ -140,23 +181,23 @@
             // Carrot
             ctx.fillStyle = '#FFA500';
             ctx.beginPath();
-            ctx.arc(food.x + gridSize / 2, food.y + gridSize / 4, gridSize / 6, 0, 2 * Math.PI);
+            ctx.arc((food.x + 0.5) * gridSize, (food.y + 0.25) * gridSize, gridSize / 6, 0, 2 * Math.PI);
             ctx.fill();
             
             ctx.fillStyle = '#FF8C00';
             ctx.beginPath();
-            ctx.arc(food.x + gridSize / 2, food.y + gridSize / 4, gridSize / 12, 0, 2 * Math.PI);
+            ctx.arc((food.x + 0.5) * gridSize, (food.y + 0.25) * gridSize, gridSize / 12, 0, 2 * Math.PI);
             ctx.fill();
         }
 
         function generateFood() {
-            food.x = Math.floor(Math.random() * tileCount) * gridSize;
-            food.y = Math.floor(Math.random() * tileCount) * gridSize;
+            food.x = Math.floor(Math.random() * tileCount);
+            food.y = Math.floor(Math.random() * tileCount);
         }
 
         function checkCollision() {
             const head = snake[0];
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
                 resetGame();
             }
             for (let i = 1; i < snake.length; i++) {
@@ -168,31 +209,37 @@
 
         function resetGame() {
             alert(`Game Over! Moishe's score: ${score}`);
-            snake = [{x: 200, y: 200}];
-            dx = 20;
+            snake = [{x: 10, y: 10}];
+            dx = 1;
             dy = 0;
             score = 0;
             generateFood();
         }
 
+        function changeDirection(newDx, newDy) {
+            if ((newDx === 1 && dx !== -1) || (newDx === -1 && dx !== 1) ||
+                (newDy === 1 && dy !== -1) || (newDy === -1 && dy !== 1)) {
+                dx = newDx;
+                dy = newDy;
+            }
+        }
+
         function handleKeyPress(e) {
             switch(e.key) {
-                case 'ArrowLeft':
-                    if (dx === 0) { dx = -gridSize; dy = 0; }
-                    break;
-                case 'ArrowUp':
-                    if (dy === 0) { dx = 0; dy = -gridSize; }
-                    break;
-                case 'ArrowRight':
-                    if (dx === 0) { dx = gridSize; dy = 0; }
-                    break;
-                case 'ArrowDown':
-                    if (dy === 0) { dx = 0; dy = gridSize; }
-                    break;
+                case 'ArrowLeft': changeDirection(-1, 0); break;
+                case 'ArrowUp': changeDirection(0, -1); break;
+                case 'ArrowRight': changeDirection(1, 0); break;
+                case 'ArrowDown': changeDirection(0, 1); break;
             }
         }
 
         document.addEventListener('keydown', handleKeyPress);
+
+        // Mobile touch controls
+        document.getElementById('leftBtn').addEventListener('click', () => changeDirection(-1, 0));
+        document.getElementById('rightBtn').addEventListener('click', () => changeDirection(1, 0));
+        document.getElementById('upBtn').addEventListener('click', () => changeDirection(0, -1));
+        document.getElementById('downBtn').addEventListener('click', () => changeDirection(0, 1));
 
         generateFood();
         gameLoop();
