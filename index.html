@@ -30,22 +30,21 @@
         }
         #mobileControls {
             display: none;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 20px;
             width: 240px;
+            height: 240px;
+            position: relative;
+            margin: 20px auto;
         }
         .challahBtn {
             width: 80px;
             height: 50px;
-            margin: 5px;
             background-color: #deb887;
             border: 2px solid #8b4513;
             border-radius: 25px;
             font-size: 24px;
             color: #8b4513;
             cursor: pointer;
-            position: relative;
+            position: absolute;
             overflow: hidden;
         }
         .challahBtn::before {
@@ -70,8 +69,10 @@
             border-radius: 18px;
             z-index: -1;
         }
-        #upBtn { margin-left: 85px; }
-        #downBtn { margin-left: 85px; }
+        #upBtn { top: 0; left: 80px; }
+        #leftBtn { top: 95px; left: 0; }
+        #rightBtn { top: 95px; right: 0; }
+        #downBtn { bottom: 0; left: 80px; }
     </style>
 </head>
 <body>
@@ -114,7 +115,7 @@
         window.addEventListener('resize', resizeCanvas);
 
         if (isMobile()) {
-            mobileControls.style.display = 'flex';
+            mobileControls.style.display = 'block';
         }
 
         function gameLoop() {
